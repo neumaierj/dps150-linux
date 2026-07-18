@@ -1,0 +1,23 @@
+[project]
+name = "dps150"
+version = "0.1.0"
+description = "Linux GUI for the FNIRSI DPS-150 portable DC power supply"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.8",
+    "pyserial>=3.5",
+    "pyqtgraph>=0.13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.gui-scripts]
+dps150 = "dps150.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["dps150*"]
