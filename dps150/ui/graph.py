@@ -29,6 +29,8 @@ class GraphPanel(QWidget):
         self._v: deque[float] = deque(maxlen=_MAX_POINTS)
         self._i: deque[float] = deque(maxlen=_MAX_POINTS)
         self._p: deque[float] = deque(maxlen=_MAX_POINTS)
+        self._capacity = 0.0
+        self._energy = 0.0
 
         self._pause = QPushButton("Pause")
         self._pause.setCheckable(True)
@@ -48,9 +50,13 @@ class GraphPanel(QWidget):
             f'&nbsp;&nbsp; <span style="color: {theme.CYAN};">— Current / A</span>'
             f'&nbsp;&nbsp; <span style="color: {theme.GREEN};">— Power / W</span></b>'
         )
+        self._stats = QLabel("-.--- Ah   -.--- Wh")
+        self._stats.setStyleSheet(f"color: {theme.MUTED}; font-weight: bold;")
 
         buttons = QHBoxLayout()
         buttons.addWidget(legend)
+        buttons.addSpacing(16)
+        buttons.addWidget(self._stats)
         buttons.addWidget(self._export_status, stretch=1)
         buttons.addWidget(export_csv)
         buttons.addWidget(export_png)
@@ -83,6 +89,13 @@ class GraphPanel(QWidget):
         layout.addWidget(graphs)
 
     def update_values(self, values: dict) -> None:
+        # Ah/Wh arrive as their own frames and stay live even while paused.
+        if "output_capacity" in values:
+            self._capacity = values["output_capacity"]
+        if "output_energy" in values:
+            self._energy = values["output_energy"]
+        if "output_capacity" in values or "output_energy" in values:
+            self._stats.setText(f"{self._capacity:.3f} Ah   {self._energy:.3f} Wh")
         # Register 195 always carries voltage, current and power together.
         if "output_voltage" not in values or self._pause.isChecked():
             return
@@ -95,6 +108,7 @@ class GraphPanel(QWidget):
             curve.setData(t, list(data))
 
     def clear(self) -> None:
+        self._t0 = time.monotonic()
         for series in (self._t, self._v, self._i, self._p):
             series.clear()
         for curve in self._curves:
