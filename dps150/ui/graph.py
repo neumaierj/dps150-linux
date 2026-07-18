@@ -41,7 +41,16 @@ class GraphPanel(QWidget):
         self._export_status = QLabel()
         self._export_status.setStyleSheet(f"color: {theme.MUTED};")
 
+        # Horizontal legend instead of rotated axis labels: rotated text
+        # overflows the plot rows whenever the window is short.
+        legend = QLabel(
+            f'<b><span style="color: {theme.YELLOW};">— Voltage / V</span>'
+            f'&nbsp;&nbsp; <span style="color: {theme.CYAN};">— Current / A</span>'
+            f'&nbsp;&nbsp; <span style="color: {theme.GREEN};">— Power / W</span></b>'
+        )
+
         buttons = QHBoxLayout()
+        buttons.addWidget(legend)
         buttons.addWidget(self._export_status, stretch=1)
         buttons.addWidget(export_csv)
         buttons.addWidget(export_png)
@@ -53,20 +62,12 @@ class GraphPanel(QWidget):
         graphs.setBackground(theme.BACKGROUND)
         self._curves = []
         plots = []
-        for row, (label, color) in enumerate(
-            [
-                ("Voltage / V", theme.YELLOW),
-                ("Current / A", theme.CYAN),
-                ("Power / W", theme.GREEN),
-            ]
-        ):
+        for row, color in enumerate((theme.YELLOW, theme.CYAN, theme.GREEN)):
             plot = graphs.addPlot(row=row, col=0)
             axis = plot.getAxis("left")
-            # No SI rescaling: it appends "(x0.001)" to the label, which
-            # overflows the short plot rows and clips.
+            # No SI rescaling: it rescales tick values and mislabels the axes.
             axis.enableAutoSIPrefix(False)
-            axis.setWidth(64)
-            plot.setLabel("left", label, color=color, bold=True)
+            axis.setWidth(56)
             plot.showGrid(x=True, y=True, alpha=0.3)
             plot.getAxis("bottom").enableAutoSIPrefix(False)
             if plots:
