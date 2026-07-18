@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from .. import sequence
 from . import theme
+from .controls import ClampSpinBox
 
 
 class SequencePanel(QWidget):
@@ -104,7 +105,7 @@ class SequencePanel(QWidget):
 
     @staticmethod
     def _volt_spin(value: float) -> QDoubleSpinBox:
-        spin = QDoubleSpinBox()
+        spin = ClampSpinBox()
         spin.setRange(0.0, sequence.MAX_VOLTAGE)
         spin.setDecimals(3)
         spin.setValue(value)
