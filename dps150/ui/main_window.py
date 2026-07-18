@@ -8,13 +8,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from ..device import DPS150, available_ports
 from .controls import ControlsPanel
+from .groups import GroupsPanel
 from .metering import MeteringPanel
+from .protection import ProtectionPanel
 
 
 class MainWindow(QMainWindow):
@@ -44,11 +47,22 @@ class MainWindow(QMainWindow):
         self.controls.currentRequested.connect(self.device.set_current)
         self.controls.outputRequested.connect(self.device.set_output)
 
+        self.groups = GroupsPanel()
+        self.groups.setpointChanged.connect(self.device.set_float)
+        self.groups.applyRequested.connect(self._on_apply_group)
+        self.protection = ProtectionPanel()
+        self.protection.thresholdChanged.connect(self.device.set_float)
+
+        self._tabs = QTabWidget()
+        self._tabs.addTab(self.groups, "Groups")
+        self._tabs.addTab(self.protection, "Protection")
+
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.addLayout(connect_bar)
         layout.addWidget(self.metering)
         layout.addWidget(self.controls)
+        layout.addWidget(self._tabs)
         layout.addStretch()
         self.setCentralWidget(central)
 
@@ -94,9 +108,15 @@ class MainWindow(QMainWindow):
             if message:
                 self.statusBar().showMessage(message, 10000)
 
+    def _on_apply_group(self, volts: float, amps: float) -> None:
+        self.device.set_voltage(volts)
+        self.device.set_current(amps)
+
     def _on_values(self, values: dict) -> None:
         self.metering.update_values(values)
         self.controls.update_values(values)
+        self.groups.update_values(values)
+        self.protection.update_values(values)
         info_changed = False
         for key in ("model_name", "hardware_version", "firmware_version"):
             if key in values:
@@ -121,3 +141,4 @@ class MainWindow(QMainWindow):
     def _set_panels_enabled(self, enabled: bool) -> None:
         self.metering.setEnabled(enabled)
         self.controls.setEnabled(enabled)
+        self._tabs.setEnabled(enabled)
