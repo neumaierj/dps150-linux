@@ -15,9 +15,11 @@ from PySide6.QtWidgets import (
 
 from ..device import DPS150, available_ports
 from .controls import ControlsPanel
+from .graph import GraphPanel
 from .groups import GroupsPanel
 from .metering import MeteringPanel
 from .protection import ProtectionPanel
+from .settings import SettingsPanel
 
 
 class MainWindow(QMainWindow):
@@ -53,9 +55,15 @@ class MainWindow(QMainWindow):
         self.protection = ProtectionPanel()
         self.protection.thresholdChanged.connect(self.device.set_float)
 
+        self.graph = GraphPanel()
+        self.settings = SettingsPanel()
+        self.settings.byteChanged.connect(self.device.set_byte)
+
         self._tabs = QTabWidget()
+        self._tabs.addTab(self.graph, "Graph")
         self._tabs.addTab(self.groups, "Groups")
         self._tabs.addTab(self.protection, "Protection")
+        self._tabs.addTab(self.settings, "Device")
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -117,6 +125,8 @@ class MainWindow(QMainWindow):
         self.controls.update_values(values)
         self.groups.update_values(values)
         self.protection.update_values(values)
+        self.graph.update_values(values)
+        self.settings.update_values(values)
         info_changed = False
         for key in ("model_name", "hardware_version", "firmware_version"):
             if key in values:
