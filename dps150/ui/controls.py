@@ -37,6 +37,9 @@ class ControlsPanel(QWidget):
         self._voltage.editingFinished.connect(
             lambda: self.voltageRequested.emit(self._voltage.value())
         )
+        self._voltage_max = QPushButton("Max")
+        self._voltage_max.setToolTip("Set voltage to the device's upper limit")
+        self._voltage_max.clicked.connect(self._on_voltage_max)
         self._current.editingFinished.connect(
             lambda: self.currentRequested.emit(self._current.value())
         )
@@ -50,8 +53,12 @@ class ControlsPanel(QWidget):
         )
         self._output.clicked.connect(self._on_output_clicked)
 
+        voltage_row = QHBoxLayout()
+        voltage_row.addWidget(self._voltage, stretch=1)
+        voltage_row.addWidget(self._voltage_max)
+
         form = QFormLayout()
-        form.addRow("Voltage:", self._voltage)
+        form.addRow("Voltage:", voltage_row)
         form.addRow("Current:", self._current)
 
         layout = QHBoxLayout(self)
@@ -60,6 +67,10 @@ class ControlsPanel(QWidget):
 
     def _on_output_clicked(self, checked: bool) -> None:
         self.outputRequested.emit(checked)
+
+    def _on_voltage_max(self) -> None:
+        self._voltage.setValue(self._voltage.maximum())
+        self.voltageRequested.emit(self._voltage.value())
 
     def update_values(self, values: dict) -> None:
         # Don't fight the user while they are editing a spinbox.
