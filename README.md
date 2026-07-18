@@ -18,6 +18,14 @@ Features:
 Requires Python ≥ 3.10.
 
 ```sh
+pip install git+https://github.com/neumaierj/dps150-linux.git
+```
+
+Then launch with `dps150`.
+
+For development, work from a clone instead:
+
+```sh
 python3 -m venv .venv
 .venv/bin/pip install -e .
 ```
