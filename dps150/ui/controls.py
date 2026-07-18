@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
+from PySide6.QtGui import QValidator
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
@@ -14,6 +15,33 @@ from PySide6.QtWidgets import (
 from . import theme
 
 
+class ClampSpinBox(QDoubleSpinBox):
+    """Accepts typed values beyond the range and clamps them to min/max.
+
+    A stock QDoubleSpinBox rejects keystrokes that would exceed the maximum,
+    so e.g. "50" cannot even be typed; here it is accepted and becomes max.
+    """
+
+    def _to_number(self, text: str) -> float | None:
+        stripped = text.removesuffix(self.suffix()).strip().replace(",", ".")
+        try:
+            return float(stripped)
+        except ValueError:
+            return None
+
+    def validate(self, text: str, pos: int):
+        stripped = text.removesuffix(self.suffix()).strip()
+        if stripped in ("", "-", "+", ".", ",") or self._to_number(text) is not None:
+            return QValidator.State.Acceptable, text, pos
+        return QValidator.State.Invalid, text, pos
+
+    def valueFromText(self, text: str) -> float:
+        number = self._to_number(text)
+        if number is None:
+            return self.value()
+        return min(max(number, self.minimum()), self.maximum())
+
+
 class ControlsPanel(QWidget):
     voltageRequested = Signal(float)
     currentRequested = Signal(float)
@@ -22,7 +50,7 @@ class ControlsPanel(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
-        self._voltage = QDoubleSpinBox()
+        self._voltage = ClampSpinBox()
         self._voltage.setRange(0.0, 30.0)
         self._voltage.setDecimals(3)
         self._voltage.setSingleStep(0.1)
