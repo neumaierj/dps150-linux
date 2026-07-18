@@ -61,12 +61,20 @@ class GraphPanel(QWidget):
             ]
         ):
             plot = graphs.addPlot(row=row, col=0)
-            plot.setLabel("left", label)
+            axis = plot.getAxis("left")
+            # No SI rescaling: it appends "(x0.001)" to the label, which
+            # overflows the short plot rows and clips.
+            axis.enableAutoSIPrefix(False)
+            axis.setWidth(64)
+            plot.setLabel("left", label, color=color, bold=True)
             plot.showGrid(x=True, y=True, alpha=0.3)
+            plot.getAxis("bottom").enableAutoSIPrefix(False)
             if plots:
                 plot.setXLink(plots[0])
             plots.append(plot)
             self._curves.append(plot.plot(pen=pg.mkPen(color, width=2)))
+        for plot in plots[:-1]:
+            plot.getAxis("bottom").setStyle(showValues=False)
         plots[-1].setLabel("bottom", "Time / s")
 
         layout = QVBoxLayout(self)
