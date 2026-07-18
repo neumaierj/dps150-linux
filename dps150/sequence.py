@@ -24,7 +24,11 @@ class Step:
     current: float | None = None
 
 
-def validate(steps: list[Step]) -> None:
+def validate(
+    steps: list[Step],
+    max_voltage: float = MAX_VOLTAGE,
+    max_current: float = MAX_CURRENT,
+) -> None:
     """Raise ValueError if the sequence is not runnable."""
     if not steps:
         raise ValueError("sequence is empty")
@@ -35,14 +39,18 @@ def validate(steps: list[Step]) -> None:
         if step.time_s <= previous:
             raise ValueError(f"step {n}: times must be strictly increasing")
         previous = step.time_s
-        if not 0.0 <= step.voltage <= MAX_VOLTAGE:
-            raise ValueError(f"step {n}: voltage {step.voltage} outside 0-{MAX_VOLTAGE} V")
-        if step.current is not None and not 0.0 <= step.current <= MAX_CURRENT:
-            raise ValueError(f"step {n}: current {step.current} outside 0-{MAX_CURRENT} A")
+        if not 0.0 <= step.voltage <= max_voltage:
+            raise ValueError(f"step {n}: voltage {step.voltage} outside 0-{max_voltage} V")
+        if step.current is not None and not 0.0 <= step.current <= max_current:
+            raise ValueError(f"step {n}: current {step.current} outside 0-{max_current} A")
 
 
 def ramp_steps(
-    start_v: float, end_v: float, duration_s: float, interval_s: float
+    start_v: float,
+    end_v: float,
+    duration_s: float,
+    interval_s: float,
+    max_voltage: float = MAX_VOLTAGE,
 ) -> list[Step]:
     """Evenly spaced voltage ramp including both endpoints, starting at t=0."""
     if duration_s <= 0:
@@ -57,7 +65,7 @@ def ramp_steps(
         )
         for k in range(count + 1)
     ]
-    validate(steps)
+    validate(steps, max_voltage=max_voltage)
     return steps
 
 
@@ -71,7 +79,7 @@ def save_csv(path: str, steps: list[Step]) -> None:
             )
 
 
-def load_csv(path: str) -> list[Step]:
+def load_csv(path: str, max_voltage: float = MAX_VOLTAGE) -> list[Step]:
     steps = []
     with open(path, newline="") as f:
         reader = csv.reader(f)
@@ -91,7 +99,7 @@ def load_csv(path: str) -> list[Step]:
                     current=float(current_cell) if current_cell else None,
                 )
             )
-    validate(steps)
+    validate(steps, max_voltage=max_voltage)
     return steps
 
 
@@ -120,8 +128,8 @@ class SequenceRunner(QObject):
     def is_running(self) -> bool:
         return self._timer.isActive() or self._index < len(self._steps)
 
-    def start(self, steps: list[Step]) -> None:
-        validate(steps)
+    def start(self, steps: list[Step], max_voltage: float = MAX_VOLTAGE) -> None:
+        validate(steps, max_voltage=max_voltage)
         self.stop()
         self._steps = list(steps)
         self._index = 0

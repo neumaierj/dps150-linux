@@ -102,6 +102,13 @@ class SequencePanel(QWidget):
             self._start_v, self._end_v, self._duration, self._interval,
         )
         self._steps: list[sequence.Step] = []
+        self._max_voltage = sequence.MAX_VOLTAGE
+
+    def update_values(self, values: dict) -> None:
+        if "upper_limit_voltage" in values:
+            self._max_voltage = values["upper_limit_voltage"]
+            self._start_v.setMaximum(self._max_voltage)
+            self._end_v.setMaximum(self._max_voltage)
 
     @staticmethod
     def _volt_spin(value: float) -> QDoubleSpinBox:
@@ -141,7 +148,7 @@ class SequencePanel(QWidget):
                 )
             except ValueError:
                 raise ValueError(f"row {row + 1}: not a number")
-        sequence.validate(steps)
+        sequence.validate(steps, max_voltage=self._max_voltage)
         return steps
 
     # Slots
@@ -153,6 +160,7 @@ class SequencePanel(QWidget):
                 self._end_v.value(),
                 self._duration.value(),
                 self._interval.value(),
+                max_voltage=self._max_voltage,
             )
         except ValueError as e:
             self._status.setText(str(e))
@@ -169,7 +177,7 @@ class SequencePanel(QWidget):
         if not path:
             return
         try:
-            steps = sequence.load_csv(path)
+            steps = sequence.load_csv(path, max_voltage=self._max_voltage)
         except (OSError, ValueError) as e:
             self._status.setText(f"Load failed: {e}")
             return
@@ -202,7 +210,7 @@ class SequencePanel(QWidget):
         self._stop.setEnabled(True)
         for widget in self._editors:
             widget.setEnabled(False)
-        self._runner.start(self._steps)
+        self._runner.start(self._steps, max_voltage=self._max_voltage)
 
     def stop(self) -> None:
         was_running = self._runner.is_running

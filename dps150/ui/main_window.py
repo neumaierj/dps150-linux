@@ -139,6 +139,7 @@ class MainWindow(QMainWindow):
         self.protection.update_values(values)
         self.graph.update_values(values)
         self.settings.update_values(values)
+        self.sequence.update_values(values)
         info_changed = False
         for key in ("model_name", "hardware_version", "firmware_version"):
             if key in values:
