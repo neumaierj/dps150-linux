@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from . import theme
+
 
 class ControlsPanel(QWidget):
     voltageRequested = Signal(float)
@@ -44,7 +46,7 @@ class ControlsPanel(QWidget):
         self._output.setMinimumHeight(40)
         self._output.setStyleSheet(
             "QPushButton { font-weight: bold; }"
-            "QPushButton:checked { background: #2e7d32; color: white; }"
+            f"QPushButton:checked {{ background: {theme.GREEN}; color: black; }}"
         )
         self._output.clicked.connect(self._on_output_clicked)
 

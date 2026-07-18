@@ -8,6 +8,8 @@ from collections import deque
 import pyqtgraph as pg
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
+from . import theme
+
 _MAX_POINTS = 10_000  # ~15 min at the device's ~10 Hz metering rate
 
 
@@ -31,10 +33,15 @@ class GraphPanel(QWidget):
         buttons.addWidget(clear)
 
         graphs = pg.GraphicsLayoutWidget()
+        graphs.setBackground(theme.BACKGROUND)
         self._curves = []
         plots = []
         for row, (label, color) in enumerate(
-            [("Voltage / V", "#e6a817"), ("Current / A", "#4dabf7"), ("Power / W", "#69db7c")]
+            [
+                ("Voltage / V", theme.YELLOW),
+                ("Current / A", theme.CYAN),
+                ("Power / W", theme.GREEN),
+            ]
         ):
             plot = graphs.addPlot(row=row, col=0)
             plot.setLabel("left", label)

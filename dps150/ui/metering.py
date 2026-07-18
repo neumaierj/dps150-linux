@@ -5,6 +5,8 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from . import theme
+
 _BIG = "font-size: 32pt; font-family: monospace; font-weight: bold;"
 _BADGE = (
     "padding: 2px 10px; border-radius: 4px; font-weight: bold; color: white;"
@@ -18,8 +20,12 @@ class MeteringPanel(QWidget):
         self._voltage = QLabel("--.---")
         self._current = QLabel("-.---")
         self._power = QLabel("--.--")
-        for label in (self._voltage, self._current, self._power):
-            label.setStyleSheet(_BIG)
+        for label, color in (
+            (self._voltage, theme.YELLOW),
+            (self._current, theme.CYAN),
+            (self._power, theme.GREEN),
+        ):
+            label.setStyleSheet(_BIG + f"color: {color};")
             label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         self._mode = QLabel("--")
@@ -34,14 +40,21 @@ class MeteringPanel(QWidget):
         self._protection.hide()
 
         self._input_voltage = QLabel("Input: --.- V")
+        self._input_voltage.setStyleSheet(f"color: {theme.YELLOW}; font-weight: bold;")
         self._temperature = QLabel("Temp: --.- °C")
 
         grid = QGridLayout()
-        for col, (value, unit) in enumerate(
-            [(self._voltage, "V"), (self._current, "A"), (self._power, "W")]
+        for col, (value, unit, color) in enumerate(
+            [
+                (self._voltage, "V", theme.YELLOW),
+                (self._current, "A", theme.CYAN),
+                (self._power, "W", theme.GREEN),
+            ]
         ):
             unit_label = QLabel(unit)
-            unit_label.setStyleSheet("font-size: 16pt;")
+            unit_label.setStyleSheet(
+                f"font-size: 16pt; font-weight: bold; color: {color};"
+            )
             unit_label.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
             grid.addWidget(value, 0, col * 2)
             grid.addWidget(unit_label, 0, col * 2 + 1)
@@ -70,9 +83,9 @@ class MeteringPanel(QWidget):
             self._temperature.setText(f"Temp: {values['temperature']:.1f} °C")
         if "mode" in values:
             mode = values["mode"]
-            color = "#ef6c00" if mode == "CC" else "#2e7d32"
+            color = theme.ORANGE if mode == "CC" else theme.GREEN
             self._mode.setText(mode)
-            self._mode.setStyleSheet(_BADGE + f"background: {color};")
+            self._mode.setStyleSheet(_BADGE + f"background: {color}; color: black;")
         if "protection_state" in values:
             state = values["protection_state"]
             if state:
