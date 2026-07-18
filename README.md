@@ -10,7 +10,9 @@ Features:
 - Voltage and current setpoints, output on/off, CC/CV indicator
 - Protection status banner and editable OVP / OCP / OPP / OTP / LVP thresholds
 - Six preset groups (M1–M6) with one-click apply
-- Rolling live graph of V / I / P with pause and clear
+- Rolling live graph of V / I / P with pause, clear, and CSV / PNG export
+- Scriptable voltage sequences: timed ramp generator plus editable step
+  tables, loadable/savable as CSV profiles (`time_s,voltage_V,current_A`)
 - Accumulated capacity (Ah) / energy (Wh), display brightness, speaker volume
 
 ## Installation

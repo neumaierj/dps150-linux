@@ -14,11 +14,13 @@ from PySide6.QtWidgets import (
 )
 
 from ..device import DPS150, available_ports
+from ..sequence import SequenceRunner
 from .controls import ControlsPanel
 from .graph import GraphPanel
 from .groups import GroupsPanel
 from .metering import MeteringPanel
 from .protection import ProtectionPanel
+from .sequence import SequencePanel
 from .settings import SettingsPanel
 
 
@@ -59,8 +61,14 @@ class MainWindow(QMainWindow):
         self.settings = SettingsPanel()
         self.settings.byteChanged.connect(self.device.set_byte)
 
+        self._runner = SequenceRunner(self)
+        self._runner.setVoltage.connect(self.device.set_voltage)
+        self._runner.setCurrent.connect(self.device.set_current)
+        self.sequence = SequencePanel(self._runner)
+
         self._tabs = QTabWidget()
         self._tabs.addTab(self.graph, "Graph")
+        self._tabs.addTab(self.sequence, "Sequence")
         self._tabs.addTab(self.groups, "Groups")
         self._tabs.addTab(self.protection, "Protection")
         self._tabs.addTab(self.settings, "Device")
@@ -104,6 +112,8 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("No serial port selected", 5000)
 
     def _on_connection(self, connected: bool, message: str) -> None:
+        if not connected:
+            self.sequence.stop()
         self._connect.setText("Disconnect" if connected else "Connect")
         self._ports.setEnabled(not connected)
         self._rescan.setEnabled(not connected)
@@ -121,6 +131,8 @@ class MainWindow(QMainWindow):
         self.device.set_current(amps)
 
     def _on_values(self, values: dict) -> None:
+        if values.get("protection_state"):
+            self.sequence.stop()
         self.metering.update_values(values)
         self.controls.update_values(values)
         self.groups.update_values(values)
